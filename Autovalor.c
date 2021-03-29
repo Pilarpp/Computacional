@@ -5,7 +5,7 @@
 //Funciones a utilizar
 double Dominante(double a, double b,double d);
 void MultiMatriz(double A[2][2], double v[],double m[]);
-double AproxAutovalor(double A[2][2], double v[], double m[]);
+double AproxAutovalor(double A[2][2], double v[], double m[], int i);
 
 
 int main(void)
@@ -14,9 +14,9 @@ int main(void)
     double A[2][2];
     double a,b,d; //Elementos de la Matriz A
     double dom; //valor propio dominante calculado analíticamente
-    double domAprox; //Estimación del valor proprio dominante por el Método de las potencias
+    double domAprox; //Estimación del valor propio dominante por el Método de las potencias
     double v[2], m[2]; //autovector y vector resultante al multiplicar una matriz por un vcetor
-    int i, j; //Interacciones para el método de las potencias y contador 
+    int i; //Interacciones para el método de las potencias 
 
     //Introducción al programa a utilizar 
     printf("--------------------------------------------------------------------------\n"); 
@@ -37,7 +37,7 @@ int main(void)
     //Cálculo analítido del autovalor dominante de la matriz
     dom= Dominante(a,b,d);
 
-    //Mostrar por pantalla el autovalor dominante o un mensaje en caso de no tenerlo
+    //Mostrar por pantalla el autovalor dominante + método de las potencias ó un mensaje en caso de no tenerlo
     if (dom!=0)
     {
        printf("El valor dominante calculado de forma analítica de la matriz introducida es %lf\n",dom);
@@ -47,19 +47,12 @@ int main(void)
        printf("A continuación, se procede a estimar dicho autovalor dominante mediante el MÉTODO DE LAS POTENCIAS:\n");
        printf("---------------------------------------------------------------------------------------------------\n");
        printf("Para ello, introduzca el número de interacciones deseadas: Interacciones= "); scanf("%i",&i);
-       A[0][0]=a; A[0][1]=b; A[1][0]=b; A[1][1]=d; //Introduzco los elementos en la matriz
+       A[0][0]=a; A[0][1]=b; A[1][0]=b; A[1][1]=d; //Asigno los valores a los elementos de la matriz
        v[0]=1;v[1]=1; //Aproximación inicial de autovector de la matriz A
 
-       //Aproximación del Autovector
-       for (j=0; j<i; j++)
-       {
-          MultiMatriz(A,v,m);
-          v[0]=m[0]; v[1]=m[1];
-       }
-       v[0]=v[0]/v[1]; v[1]=1; //Normalización del autovector dominante de A para que la segunda componente sea 1 sin pérdida de generalidad
-
-       //Aproximación del Autovalor: COEFICIENTE DE RAYLEIGH
-       domAprox= AproxAutovalor(A,v,m);
+       
+       //Aproximación del Autovalor: 
+       domAprox= AproxAutovalor(A,v,m, i); //Le paso a la función la matriz A, la aproximación inicial del autovector de A, un vector m donde almacenar datos y el número de interacciones
        printf("---> El autovalor dominante aproximado por el método de las potencias es %lf\n", domAprox);
 
     }
@@ -72,7 +65,8 @@ int main(void)
 
 }
 
-double Dominante(double a, double b,double d)
+//Cálculo analítico del valor propio dominante
+double Dominante(double a, double b,double d) 
 {
     double Dom, alpha1, alpha2, t, f1,f2; //Las variables t,f1,f2 son definidas para optimizar el número de cálculos
 
@@ -93,7 +87,8 @@ double Dominante(double a, double b,double d)
     return Dom;
 }
 
-void MultiMatriz(double A[2][2], double v[],double m[]) //Defino una función que multiplique una matriz 2x2 por un vector
+//Función que multiplica una matriz 2x2 por un vector
+void MultiMatriz(double A[2][2], double v[],double m[]) //Le paso la matriz y el vector a multiplicar, así como el vector donde quiero que guarde la operación
 {
 
    m[0]=A[0][0]*v[0]+A[0][1]*v[1];
@@ -102,10 +97,22 @@ void MultiMatriz(double A[2][2], double v[],double m[]) //Defino una función qu
   return;
 }
 
-double AproxAutovalor(double A[2][2], double v[], double m[])
+
+//Función que aproxima el Autovalor Dominante
+double AproxAutovalor(double A[2][2], double v[], double m[], int i)
 {
    double domAprox, num, den; 
+   int j; //contador
 
+   //Aproximación del Autovector
+   for (j=0; j<i; j++)
+       {
+          MultiMatriz(A,v,m);
+          v[0]=m[0]; v[1]=m[1];
+       }
+   v[0]=v[0]/v[1]; v[1]=1; //Normalización del autovector dominante de A para que la segunda componente sea 1 sin pérdida de generalidad
+
+   //Aproximación del autovalor a partir del autovector: COEFICIENTE DE RAYLEIGH
    MultiMatriz(A,v,m);
    num=m[0]*v[0]+m[1]*v[1];
    den=v[0]*v[0]+v[1]*v[1];
