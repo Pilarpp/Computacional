@@ -11,12 +11,13 @@ double AproxAutovalor(double A[2][2], double m[]);
 int main(void)
 {
     //Definimos las variables a utilizar
-    double A[2][2]; double r;
+    double A[2][2]; 
     double a,b,d; //Elementos de la Matriz A
     double dom; //valor propio dominante calculado analíticamente
     double domAprox; //Estimación del valor propio dominante por el Método de las potencias
     double v[2], m[2]; //autovector y vector resultante al multiplicar una matriz por un vcetor
     int i; //Interacciones para el método de las potencias 
+    double r; //Cota para el método de las potencias
 
     FILE *f1; //Puntero a fichero
     f1=fopen("EstimacionesDominante.txt", "w"); //Abro el fichero donde escribiré las estimaciones del valor propio dominante
@@ -45,11 +46,13 @@ int main(void)
     {
        printf("El valor dominante calculado de forma analítica de la matriz introducida es %lf\n",dom);
        printf("\n");
+       fprintf(f1,"%lf\n",dom); // El primer elemento del fichero es el valor analítico
+       
 
        //METODO DE LAS POTENCIAS
        printf("A continuación, se procede a estimar dicho autovalor dominante mediante el MÉTODO DE LAS POTENCIAS:\n");
        printf(" (*)El programa toma como aproximación inicial de autovector v0=(1,1).\n");
-       printf(" (*)Se ejecuta hasta que la diferencia entre el valor analítico y el estimado es menor a 0.0001 o se han alcanzado 50 interacciones.\n");
+       printf(" (*)Se ejecuta hasta que la diferencia entre el valor analítico y el estimado es menor a 0.0000001 o se han alcanzado 100 interacciones.\n");
        printf(" (*)Los resultados de las estimaciones se recogen en el fichero EstimacionesDominante.txt\n");
        printf("-------------------------------------------------------------------------------------------------------------------------------------\n");
 
@@ -64,8 +67,8 @@ int main(void)
        r=0.0000001; //Cota para la diferencia entre el valor analítico y el estimado
        for(i=0;  fabs(domAprox-dom)>r; i++) //Ejecutamos el bucle hasta que se alcance la cota impuesta
        {
-         if (i>=50) break; //Salimos del bucle si se han alcanzado las 50 interacciones sin cumplirse la condición de cota.
-         
+         if (i>=100) break; //Salimos del bucle si se han alcanzado las 100 interacciones sin cumplirse la condición de cota.
+
          MultiMatriz(A,v,m); //Cálculo del autovector aproximado
          domAprox= AproxAutovalor(A,m); //Cálculo del autovalor a partir del autovector aproximado
          fprintf(f1,"  %i                 %lf\n", i+1, domAprox); //Escritura de cada interacción en el fichero
@@ -78,10 +81,7 @@ int main(void)
        else
        printf("La matriz introducida no tiene valor propio dominante\n");
     
-
     return 0;
-
-
 }
 
 //Cálculo analítico del valor propio dominante
