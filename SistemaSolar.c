@@ -15,8 +15,9 @@ int main(void)
     double *x,*y,*vx,*vy,*m;
     double *ax, *ay, *wx, *wy;
     int ncuerpos;
-    double h, hmedio, GuardaMedida;
-    int PasosxMedida;
+    double h, hmedio, GuardaMedida, t;
+    int PasosxMedida, i, j;
+    FILE *fposiciones;
 
     char condIni[]="DatosIniciales";
 
@@ -36,8 +37,26 @@ int main(void)
     hmedio=0.5*h;
     PasosxMedida=round(GuardaMedida/h); //redondeamos la división al entero más próximo
 
-    //Evolucion del sistema
-    Evolucion(x, y, vx, vy, ax, ay, wx, wy, m, ncuerpos, h, hmedio, PasosxMedida);
+    //Abro fichero para escribir las posiciones
+    fposiciones= fopen("posiciones.txt", "w");
+
+    t=0;
+    for(i=0; i<5; i++) //Iteracciones del programa
+    {
+        //Evolucion del sistema por iteracción
+        Evolucion(x, y, vx, vy, ax, ay, wx, wy, m, ncuerpos, h, hmedio, PasosxMedida);
+        t+=h*PasosxMedida;
+
+        //Escribo en el fichero las posiciones de todos los planetas en la iteracción i
+        for(j=0; j<ncuerpos; j++)
+        {
+            fprintf(fposiciones,"%lf %lf\n", x[j],y[j]);
+        }
+        fprintf(fposiciones, "\n");    
+    }
+
+    fclose(fposiciones);
+        
 
     //Liberar memoria dinámica
     free(x);
@@ -143,11 +162,11 @@ void Evolucion(double* x, double*y, double* vx, double* vy, double* ax, double* 
             //Cálculo de r(t+h)
             x[i]=x[i]+h*wx[i];
             y[i]=y[i]+h*wy[i];
-            printf("Cuerpo %i, x[t+h]=%lf, y[t+h]=%lf\n", i+1,x[i], y[i]);
         }
 
         //Calculo las aceleraciones a tiempo t+h a partir de las posiciones en t+h
         CalcAceleracion(x, y, ax, ay, m, ncuerpos);
+        
 
         //Cálculo de v en t+h
         for(i=0; i<ncuerpos; i++)
@@ -155,6 +174,7 @@ void Evolucion(double* x, double*y, double* vx, double* vy, double* ax, double* 
             vx[i]=wx[i]+hmedio*ax[i];
             vy[i]=wy[i]+hmedio*ay[i];
         }
+        
     }
     return;
 }
