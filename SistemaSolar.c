@@ -5,15 +5,17 @@
 
 //funciones a utilizar
 int DatosInicial(char* condIni, double** x, double** y, double** vx, double** vy, double** m);
-void CalcAceleracion(double* x, double* y, double* ax, double* ay, double* m, int ncuerpos);
 void CalculaFuerza(double x1, double x2, double y1, double y2, double m1, double m2, double* fuerzax, double* fuerzay);
+void CalcAceleracion(double* x, double* y, double* ax, double* ay, double* m, int ncuerpos);
+void Evolucion(double* x, double*y, double* vx, double* vy, double* ax, double* ay, double* wx, double* wy, double* m, int ncuerpos, double h, double hmedio, int PasosxMedida);
+
 
 int main(void)
 {
     double *x,*y,*vx,*vy,*m;
-    double *ax, *ay;
+    double *ax, *ay, *wx, *wy;
     int ncuerpos;
-    double h, halfh, GuardaMedida;
+    double h, hmedio, GuardaMedida;
     int PasosxMedida;
 
     char condIni[]="DatosIniciales";
@@ -24,19 +26,26 @@ int main(void)
     //Una vez conocido el número de cuerpos, asigno memoria a la aceleración 
     ax=(double*)malloc(ncuerpos*sizeof(double));
     ay=(double*)malloc(ncuerpos*sizeof(double));
+    wx=(double*)malloc(ncuerpos*sizeof(double));
+    wy=(double*)malloc(ncuerpos*sizeof(double));
 
     //Defino el paso y cada cuánto quiero guardar la medida
     h=0.001;
     GuardaMedida=0.001;
 
-    halfh=h*0.5;
+    hmedio=0.5*h;
     PasosxMedida=round(GuardaMedida/h); //redondeamos la división al entero más próximo
+
+    //Evolucion del sistema
+    Evolucion(x, y, vx, vy, ax, ay, wx, wy, m, ncuerpos, h, hmedio, PasosxMedida);
 
     //Liberar memoria dinámica
     free(x);
     free(y);
     free(vx);
     free(vy);
+    free(ax);
+    free(ay);
     free(m);
 
     return 0;
@@ -82,6 +91,8 @@ void CalculaFuerza(double x1, double x2, double y1, double y2, double m1, double
 
     return;
 }
+
+//Cálculo de la aceleración de todos los cuerpos en el instante t
 void CalcAceleracion(double* x, double* y, double* ax, double* ay, double* m, int ncuerpos)
 {
     int i, j;
@@ -111,4 +122,39 @@ void CalcAceleracion(double* x, double* y, double* ax, double* ay, double* m, in
     }
 
     return; 
+}
+
+//Evolución del sistema
+void Evolucion(double* x, double*y, double* vx, double* vy, double* ax, double* ay, double* wx, double* wy, double* m, int ncuerpos, double h, double hmedio, int PasosxMedida)
+{
+    int i, j;
+
+    //Calculo las aceleraciones a tiempo t
+    CalcAceleracion(x, y, ax, ay, m, ncuerpos);
+
+    for(j=0; j<PasosxMedida; j++)
+    {
+        
+        for(i=0; i<ncuerpos; i++)
+        {
+            wx[i]=vx[i]+hmedio*ax[i];
+            wy[i]=vy[i]+hmedio*ay[i];
+            
+            //Cálculo de r(t+h)
+            x[i]=x[i]+h*wx[i];
+            y[i]=y[i]+h*wy[i];
+            printf("Cuerpo %i, x[t+h]=%lf, y[t+h]=%lf\n", i+1,x[i], y[i]);
+        }
+
+        //Calculo las aceleraciones a tiempo t+h a partir de las posiciones en t+h
+        CalcAceleracion(x, y, ax, ay, m, ncuerpos);
+
+        //Cálculo de v en t+h
+        for(i=0; i<ncuerpos; i++)
+        {
+            vx[i]=wx[i]+hmedio*ax[i];
+            vy[i]=wy[i]+hmedio*ay[i];
+        }
+    }
+    return;
 }
