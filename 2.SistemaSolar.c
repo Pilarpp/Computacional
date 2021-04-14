@@ -36,7 +36,6 @@ int main(void)
     wx=(double*)malloc(ncuerpos*sizeof(double));
     wy=(double*)malloc(ncuerpos*sizeof(double));
 
-
     //Defino el paso y cada cuánto quiero guardar la medida
     h=0.001;
     GuardaMedida=0.05;
