@@ -9,18 +9,19 @@ void CalcFuerza(double x1, double x2, double y1, double y2, double m1, double m2
 void CalcAceleracion(double* x, double* y, double* ax, double* ay, double* m, int ncuerpos);
 void Evolucion(double* x, double*y, double* vx, double* vy, double* ax, double* ay, double* wx, double* wy, double* m, int ncuerpos, double h, double hmedio, int PasosxMedida);
 double CalcEnergia(double* x, double* y, double* vx, double* vy, double* m, int ncuerpos);
+void Tierra(double* x, double* y, double* xt, double* yt, int ncuerpos);
 
 
 int main(void)
 {
     double *x,*y,*vx,*vy,*m;
     double *ax, *ay, *wx, *wy; 
-    double *xini, *ypre, *vueltas;
+    double *xini, *ypre, *vueltas, *xt, *yt;
     double h, hmedio, GuardaMedida;
     double E, t;
     int ncuerpos;
     int PasosxMedida, i, j;
-    FILE *fposiciones, *fEnergia;
+    FILE *fposiciones, *fEnergia, *fposTierra;
 
     char condIni[]="datosGerman.txt";
 
@@ -35,10 +36,12 @@ int main(void)
     ay=(double*)malloc(ncuerpos*sizeof(double));
     wx=(double*)malloc(ncuerpos*sizeof(double));
     wy=(double*)malloc(ncuerpos*sizeof(double));
+    xt=(double*)malloc(ncuerpos*sizeof(double));
+    yt=(double*)malloc(ncuerpos*sizeof(double));
 
     //Defino el paso y cada cuánto quiero guardar la medida
-    h=0.001;
-    GuardaMedida=0.05;
+    h=0.01;
+    GuardaMedida=0.1;
 
     hmedio=0.5*h;
     PasosxMedida=round(GuardaMedida/h); //redondeamos la división al entero más próximo
@@ -46,12 +49,23 @@ int main(void)
     //Abro ficheros para escribir los resultados
     fposiciones= fopen("posiciones.txt", "w");
     fEnergia=fopen("energias.txt", "w");
+    fposTierra=fopen("posTierra.txt", "w");
 
     //Calculo las aceleraciones en el instante inicial
     CalcAceleracion(x, y, ax, ay, m, ncuerpos);
 
     t=0;
-    for(i=0; i<25000; i++) //Iteracciones del programa
+    //Paso las coordenadas iniciales respecto a la tierra
+        Tierra(x,y,xt,yt,ncuerpos);
+
+        //Escribo en el fichero las posiciones respecto a la tierra de todos los planetas en la iteracción i
+        for(j=0; j<ncuerpos; j++)
+        {
+            fprintf(fposTierra,"%lf, %lf\n", xt[j],yt[j]);
+        }
+        fprintf(fposTierra, "\n");
+
+    for(i=0; i<1000; i++) //Iteracciones del programa
     {
         //Evolucion del sistema por iteracción
         Evolucion(x, y, vx, vy, ax, ay, wx, wy, m, ncuerpos, h, hmedio, PasosxMedida);
@@ -76,16 +90,25 @@ int main(void)
         }
         fprintf(fposiciones, "\n");
 
-
         //Cálculo de la energía total del sistema en cada iteracción y escritura a fichero
         E=CalcEnergia(x, y, vx, vy, m, ncuerpos);
         fprintf(fEnergia, "%lf\n", E);    
+
+        //Cambio de coordenadas respecto a la tierra
+        Tierra(x,y,xt,yt,ncuerpos);
+
+        //Escribo en el fichero las posiciones respecto a la tierra de todos los planetas en la iteracción i
+        for(j=0; j<ncuerpos; j++)
+        {
+            fprintf(fposTierra,"%lf, %lf\n", xt[j],yt[j]);
+        }
+        fprintf(fposTierra, "\n");
+
     }
 
     fclose(fposiciones);
     fclose(fEnergia);
-
-        
+    fclose(fposTierra);
 
     //Liberar memoria dinámica
     free(x);
@@ -96,6 +119,9 @@ int main(void)
     free(vueltas);
     free(xini);
     free(ypre);
+    free(xt);
+    free(yt);
+    
     return 0;
 }
 
@@ -212,13 +238,12 @@ void Evolucion(double* x, double*y, double* vx, double* vy, double* ax, double* 
         
 
         //Cálculo de v en t+h
-        for(i=1; i<ncuerpos; i++)
+        for(i=0; i<ncuerpos; i++)
         {
             vx[i]=wx[i]+hmedio*(ax[i]);
             vy[i]=wy[i]+hmedio*(ay[i]);
         }
 
- 
     }
     return;
 }
@@ -250,8 +275,15 @@ double CalcEnergia(double* x, double* y, double* vx, double* vy, double* m, int 
     return E_cin+E_pot;
 }
 
-//redondeo de decimales
-double RoundNdig(double Num, int nDec)
+//Calcular órbitas respecto a la tierra
+void Tierra(double* x, double* y, double* xt, double* yt, int ncuerpos)
 {
-  return ((float)((int)(Num * pow(10, nDec) + 0.5))) / pow(10, nDec);
+    int j;
+
+    for (j=0; j<ncuerpos; j++)
+    {
+        xt[j]=x[j]-x[3];
+        yt[j]=y[j]-y[3];
+    }
+    return;
 }
