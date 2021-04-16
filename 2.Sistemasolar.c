@@ -23,7 +23,7 @@ int main(void)
     int PasosxMedida, i, j;
     FILE *fposiciones, *fEnergia, *fposTierra;
 
-    char condIni[]="datosGerman.txt";
+    char condIni[]="2.DatosSinReescalar.txt";
 
     //Leo los datos del fichero y descubro cuántos cuerpos forman mi sistema
     ncuerpos= DatosInicial(condIni,&x,&y,&vx,&vy,&m);  
@@ -55,17 +55,7 @@ int main(void)
     CalcAceleracion(x, y, ax, ay, m, ncuerpos);
 
     t=0;
-    //Paso las coordenadas iniciales respecto a la tierra
-        Tierra(x,y,xt,yt,ncuerpos);
-
-        //Escribo en el fichero las posiciones respecto a la tierra de todos los planetas en la iteracción i
-        for(j=0; j<ncuerpos; j++)
-        {
-            fprintf(fposTierra,"%lf, %lf\n", xt[j],yt[j]);
-        }
-        fprintf(fposTierra, "\n");
-
-    for(i=0; i<1000; i++) //Iteracciones del programa
+    for(i=0; i<2000; i++) //Iteracciones del programa
     {
         //Evolucion del sistema por iteracción
         Evolucion(x, y, vx, vy, ax, ay, wx, wy, m, ncuerpos, h, hmedio, PasosxMedida);
@@ -74,9 +64,9 @@ int main(void)
         //Compruebo el periodo
         for (j=1; j<ncuerpos; j++)
         {
-            if(ypre[j]<0 && y[j]>=0 && x[j]>0 && vueltas[j]<1)
+            if(ypre[j]<0 && y[j]>=0 && x[j]>0 && vueltas[j]<1) //Puesto que todos los planetas comienzan en y=0;
             {
-                printf("El periodo del planeta %i se encuentra entre [%lf,%lf] días\n",j, (t-h)*58.1, t*58.1);
+                printf("El periodo del planeta %i se encuentra entre [%lf,%lf] días\n",j, (t-h)*58.1, t*58.1);//reescalamos el tiempo para mostrarlo en días
                 vueltas[j]=vueltas[j]+1;
             }
         }
@@ -86,7 +76,7 @@ int main(void)
         for(j=0; j<ncuerpos; j++)
         {
             fprintf(fposiciones,"%lf, %lf\n", x[j],y[j]);
-            ypre[j]=y[j];
+            ypre[j]=y[j]; //Guardo el valor de la iterracción en un vector auxiliar para comprobar el periodo
         }
         fprintf(fposiciones, "\n");
 
@@ -159,8 +149,6 @@ int DatosInicial(char* condIni, double** x, double** y, double** vx, double** vy
         (*vx)[i]=0;
         (*vy)[i]=(*vy)[i]*sqrt(c/(CstG*Msol));
     }
-
-
     fclose(fcondIni);
 
     return ncuerpos;
