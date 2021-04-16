@@ -39,6 +39,7 @@
 #
 # ================================================================================
 
+
 # Importa los módulos necesarios
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
